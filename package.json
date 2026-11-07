@@ -55,6 +55,7 @@
         "idb": "8.0.3",
         "jsqr": "1.4.0",
         "monaco-editor": "^0.55.1",
+        "sucrase": "^3.35.0",
         "nanoid": "^5.1.16",
         "native-file-system-adapter": "^3.0.1",
         "virtual-merge": "^1.0.1",

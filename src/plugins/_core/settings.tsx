@@ -5,7 +5,7 @@
  */
 
 import { definePluginSettings } from "@api/Settings";
-import { BackupRestoreIcon, CloudIcon, LogIcon, MainSettingsIcon, PaintbrushIcon, PatchHelperIcon, PluginsIcon, UpdaterIcon } from "@components/Icons";
+import { AppsIcon, BackupRestoreIcon, CloudIcon, LogIcon, MainSettingsIcon, PaintbrushIcon, PatchHelperIcon, PluginsIcon, UpdaterIcon } from "@components/Icons";
 import {
     BackupAndRestoreTab,
     ChangelogTab,
@@ -14,6 +14,7 @@ import {
     PluginsTab,
     ThemesTab,
     UpdaterTab,
+    UserPluginsTab,
     VencordTab,
 } from "@components/settings";
 import { gitHashShort } from "@shared/vencordUserAgent";
@@ -202,6 +203,12 @@ export default definePlugin({
                 title: "Plugins",
                 Component: PluginsTab,
                 Icon: PluginsIcon
+            }),
+            !IS_WEB && buildEntry({
+                key: "equicord_userplugins",
+                title: "User Plugins",
+                Component: UserPluginsTab,
+                Icon: AppsIcon
             }),
             buildEntry({
                 key: "equicord_themes",

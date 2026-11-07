@@ -24,7 +24,7 @@ import { appendFile, mkdir, readdir, readFile, rm, writeFile } from "fs/promises
 import path, { join } from "path";
 import Zip from "zip-local";
 
-import { BUILD_TIMESTAMP, commonOpts, globPlugins, IS_DEV, IS_ANTI_CRASH_TEST, IS_REPORTER, IS_COMPANION_TEST, IS_STANDALONE, VERSION, commonRendererPlugins, buildOrWatchAll, stringifyValues } from "./common.mjs";
+import { BUILD_TIMESTAMP, commonOpts, globPlugins, hostModulesPlugin, IS_DEV, IS_ANTI_CRASH_TEST, IS_REPORTER, IS_COMPANION_TEST, IS_STANDALONE, VERSION, commonRendererPlugins, buildOrWatchAll, stringifyValues } from "./common.mjs";
 
 /**
  * @type {import("esbuild").BuildOptions}
@@ -38,6 +38,7 @@ const commonOptions = {
     target: ["esnext"],
     plugins: [
         globPlugins("web"),
+        hostModulesPlugin("web"),
         ...commonRendererPlugins
     ],
     define: stringifyValues({

@@ -41,6 +41,15 @@ export const enum IpcEvents {
 
     GET_PLUGIN_IPC_METHOD_MAP = "VencordGetPluginIpcMethodMap",
 
+    GET_USER_PLUGINS = "VencordGetUserPlugins",
+    USER_PLUGINS_UPDATE = "VencordUserPluginsUpdate",
+    OPEN_USER_PLUGINS_FOLDER = "VencordOpenUserPluginsFolder",
+    LIST_USER_PLUGIN_ENTRIES = "VencordListUserPluginEntries",
+    REVEAL_USER_PLUGIN = "VencordRevealUserPlugin",
+    REMOVE_USER_PLUGIN = "VencordRemoveUserPlugin",
+    INSTALL_USER_PLUGIN_FROM_GIT = "VencordInstallUserPluginFromGit",
+    UPDATE_USER_PLUGIN_FROM_GIT = "VencordUpdateUserPluginFromGit",
+
     CSP_IS_DOMAIN_ALLOWED = "VencordCspIsDomainAllowed",
     CSP_REMOVE_OVERRIDE = "VencordCspRemoveOverride",
     CSP_REQUEST_ADD_OVERRIDE = "VencordCspRequestAddOverride",

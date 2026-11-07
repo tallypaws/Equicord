@@ -41,6 +41,7 @@ import { get as dsGet } from "./api/DataStore";
 import { popNotice, showNotice } from "./api/Notices";
 import { NotificationData, showNotification } from "./api/Notifications";
 import { initPluginManager, PMLogger, startAllPlugins } from "./api/PluginManager";
+import { loadUserPlugins, reloadUserPlugins } from "./api/UserPlugins";
 import { PlainSettings, Settings, SettingsStore } from "./api/Settings";
 import { areLocalSettingsDirty, getCloudSettings, getCloudSyncDirection, markLocalSettingsDirty, putCloudSettings, shouldCloudSync } from "./api/SettingsSync/cloudSync";
 import { relaunch } from "./utils/native";
@@ -168,6 +169,16 @@ async function runUpdateCheck() {
     }
 }
 
+function initUserPluginsIpc() {
+    if (IS_WEB) return;
+
+    VencordNative.userPlugins.addChangeListener(() => {
+        const needRestart = reloadUserPlugins();
+        if (needRestart.length)
+            showNotice(`${needRestart.join(", ")} changed on disk and needs a restart to apply.`, "Restart", relaunch);
+    });
+}
+
 function initTrayIpc() {
     if (IS_WEB || IS_UPDATER_DISABLED) return;
 
@@ -205,6 +216,7 @@ async function init() {
 
     syncSettings();
     initTrayIpc();
+    initUserPluginsIpc();
 
     if (!IS_DEV && !IS_WEB && !IS_UPDATER_DISABLED) {
         runUpdateCheck();
@@ -229,6 +241,7 @@ async function init() {
     }
 }
 
+loadUserPlugins();
 initPluginManager();
 initStyles();
 startAllPlugins(StartAt.Init);

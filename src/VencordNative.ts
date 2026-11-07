@@ -7,6 +7,8 @@
 import type { Settings } from "@api/Settings";
 import type { CspRequestResult } from "@main/csp/manager";
 import type { PluginIpcMappings } from "@main/ipcPlugins";
+import type { UserPluginPayload } from "@main/userPlugins";
+import type { UserPluginEntry, UserPluginOpResult } from "@main/userPlugins/manage";
 import { UserThemeHeader } from "@main/themes";
 import { IpcEvents } from "@shared/IpcEvents";
 import type { IpcRes } from "@utils/types";
@@ -58,6 +60,19 @@ export default {
         getSettingsDir: () => invoke<string>(IpcEvents.GET_SETTINGS_DIR),
 
         openFolder: () => invoke<void>(IpcEvents.OPEN_SETTINGS_FOLDER),
+    },
+
+    userPlugins: {
+        getBundles: () => sendSync<UserPluginPayload>(IpcEvents.GET_USER_PLUGINS),
+        addChangeListener(cb: () => void) {
+            ipcRenderer.on(IpcEvents.USER_PLUGINS_UPDATE, () => cb());
+        },
+        openFolder: () => invoke<void>(IpcEvents.OPEN_USER_PLUGINS_FOLDER),
+        listEntries: () => invoke<UserPluginEntry[]>(IpcEvents.LIST_USER_PLUGIN_ENTRIES),
+        reveal: (dir: string) => invoke<void>(IpcEvents.REVEAL_USER_PLUGIN, dir),
+        remove: (dir: string) => invoke<UserPluginOpResult>(IpcEvents.REMOVE_USER_PLUGIN, dir),
+        installFromGit: (url: string) => invoke<UserPluginOpResult>(IpcEvents.INSTALL_USER_PLUGIN_FROM_GIT, url),
+        updateFromGit: (dir: string) => invoke<UserPluginOpResult>(IpcEvents.UPDATE_USER_PLUGIN_FROM_GIT, dir)
     },
 
     quickCss: {

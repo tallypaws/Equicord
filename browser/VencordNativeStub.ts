@@ -77,6 +77,17 @@ window.VencordNative = {
         rebuild: async () => ({ ok: true, value: true }),
     },
 
+    userPlugins: {
+        getBundles: () => ({ bundles: [], errors: {} }),
+        addChangeListener: NOOP,
+        openFolder: NOOP_ASYNC,
+        listEntries: async () => [],
+        reveal: NOOP_ASYNC,
+        remove: async () => ({ ok: false, message: "Not supported on web" }),
+        installFromGit: async () => ({ ok: false, message: "Not supported on web" }),
+        updateFromGit: async () => ({ ok: false, message: "Not supported on web" })
+    },
+
     quickCss: {
         get: () => DataStore.get("VencordQuickCss").then(s => s ?? ""),
         set: async (css: string) => {

@@ -31,6 +31,7 @@ import { join } from "path";
 
 import { registerCspIpcHandlers } from "./csp/manager";
 import { getThemeInfo, stripBOM, UserThemeHeader } from "./themes";
+import { USER_PLUGINS_DIR } from "./userPlugins";
 import { ALLOWED_PROTOCOLS, QUICK_CSS_PATH, SETTINGS_DIR, THEMES_DIR } from "./utils/constants";
 import { ensureSafePath } from "./utils/ensureSafePath";
 import { makeLinksOpenExternally } from "./utils/externalLinks";
@@ -130,13 +131,17 @@ ipcMain.handle(IpcEvents.INIT_FILE_WATCHERS, ({ sender }) => {
         sender.postMessage(IpcEvents.THEME_UPDATE, void 0);
     }));
 
+    const userPluginsWatcher = watch(USER_PLUGINS_DIR, { persistent: false, recursive: true }, debounce(() => {
+        sender.postMessage(IpcEvents.USER_PLUGINS_UPDATE, void 0);
+    }, 300));
+
     if (IS_DEV) {
         rendererCssWatcher = watch(RENDERER_CSS_PATH, { persistent: false }, async () => {
             sender.postMessage(IpcEvents.RENDERER_CSS_UPDATE, await readFile(RENDERER_CSS_PATH, "utf-8"));
         });
     }
 
-    fsWatchers = [quickCssWatcher, themesWatcher, rendererCssWatcher].filter(Boolean) as FSWatcher[];
+    fsWatchers = [quickCssWatcher, themesWatcher, userPluginsWatcher, rendererCssWatcher].filter(Boolean) as FSWatcher[];
 
     sender.once("destroyed", () => {
         quickCssWatcher?.close();

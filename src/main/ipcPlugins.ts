@@ -21,12 +21,14 @@ import { ipcMain } from "electron";
 
 import PluginNatives from "~pluginNatives";
 
+import { loadUserNatives } from "./userPlugins/natives";
+
 const PluginIpcMappings = {} as Record<string, Record<string, string>>;
 export type PluginIpcMappings = typeof PluginIpcMappings;
 
-for (const [plugin, methods] of Object.entries(PluginNatives)) {
+function registerNatives(plugin: string, methods: Record<string, (...args: any[]) => unknown>) {
     const entries = Object.entries(methods);
-    if (!entries.length) continue;
+    if (!entries.length || plugin in PluginIpcMappings) return;
 
     const mappings = PluginIpcMappings[plugin] = {};
 
@@ -36,6 +38,9 @@ for (const [plugin, methods] of Object.entries(PluginNatives)) {
         mappings[methodName] = key;
     }
 }
+
+for (const [plugin, methods] of Object.entries(PluginNatives)) registerNatives(plugin, methods);
+for (const [plugin, methods] of Object.entries(loadUserNatives())) registerNatives(plugin, methods);
 
 ipcMain.on(IpcEvents.GET_PLUGIN_IPC_METHOD_MAP, e => {
     e.returnValue = PluginIpcMappings;

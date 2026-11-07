@@ -28,6 +28,15 @@ declare module "~plugins" {
     export const ExcludedPlugins: Record<string, PluginTarget>;
 }
 
+declare module "~hostModules" {
+    const modules: Record<string, () => Record<string, unknown>>;
+    export default modules;
+}
+declare module "~mainHostModules" {
+    const modules: Record<string, () => Record<string, unknown>>;
+    export default modules;
+}
+
 declare module "~git-hash" {
     const hash: string;
     export default hash;

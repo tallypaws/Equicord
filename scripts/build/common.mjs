@@ -31,6 +31,7 @@ import { fileURLToPath } from "url";
 import { promisify } from "util";
 
 import { getPluginTarget } from "../utils.mjs";
+import { collectHostModules, collectMainHostModules, generateHostModulesCode } from "./hostModules.mjs";
 
 const PackageJSON = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../package.json"), "utf-8"));
 
@@ -133,6 +134,48 @@ export const makeAllPackagesExternalPlugin = {
 };
 
 /**
+ * @type {(target: string, kind: "web" | "discordDesktop" | "vesktop" | "equibop") => boolean}
+ */
+export const isTargetExcluded = (target, kind) =>
+    (target === "dev" && !IS_DEV) ||
+    (target === "web" && kind === "discordDesktop") ||
+    (target === "browser" && kind !== "web") ||
+    (target === "desktop" && kind === "web") ||
+    (target === "discordDesktop" && kind !== "discordDesktop") ||
+    (target === "vesktop" && kind !== "vesktop" && kind !== "equibop") ||
+    (target === "equibop" && kind !== "equibop" && kind !== "vesktop");
+
+/**
+ * Lets plugins that are compiled while the client runs import everything built in plugins can import.
+ * @type {(kind: "web" | "discordDesktop" | "vesktop" | "equibop" | "main") => import("esbuild").Plugin}
+ */
+export const hostModulesPlugin = kind => ({
+    name: "host-modules-plugin",
+    setup: build => {
+        const filter = kind === "main" ? /^~mainHostModules$/ : /^~hostModules$/;
+        build.onResolve({ filter }, args => ({ namespace: "host-modules", path: args.path }));
+        build.onLoad({ filter, namespace: "host-modules" }, () => {
+            if (kind === "web") return { contents: "export default {};" };
+
+            const mods = kind === "main"
+                ? collectMainHostModules(process.cwd())
+                : collectHostModules(process.cwd(), folder => {
+                    const [, dir, plugin] = /^src[\\/](plugins|equicordplugins|userplugins)[\\/]([^\\/]+)/.exec(folder) ?? [];
+                    if (dir === "userplugins") return true;
+                    const target = plugin && getPluginTarget(plugin);
+                    return !!target && !IS_REPORTER && isTargetExcluded(target, kind);
+                });
+
+            return {
+                contents: generateHostModulesCode(mods),
+                resolveDir: "./src",
+                watchDirs: ["api", "utils", "components", "shared", "debug", "webpack", "main"].map(d => resolve("src", d))
+            };
+        });
+    }
+});
+
+/**
  * @type {(kind: "web" | "discordDesktop" | "vesktop" | "equibop") => import("esbuild").Plugin}
  */
 export const globPlugins = kind => ({
@@ -168,16 +211,7 @@ export const globPlugins = kind => ({
                     const target = getPluginTarget(fileName);
 
                     if (target && !IS_REPORTER) {
-                        const excluded =
-                            (target === "dev" && !IS_DEV) ||
-                            (target === "web" && kind === "discordDesktop") ||
-                            (target === "browser" && kind !== "web") ||
-                            (target === "desktop" && kind === "web") ||
-                            (target === "discordDesktop" && kind !== "discordDesktop") ||
-                            (target === "vesktop" && kind !== "vesktop" && kind !== "equibop") ||
-                            (target === "equibop" && kind !== "equibop" && kind !== "vesktop");
-
-                        if (excluded) {
+                        if (isTargetExcluded(target, kind)) {
                             const name = await resolvePluginName(fullDir, file);
                             excludedCode += `${JSON.stringify(name)}:${JSON.stringify(target)},\n`;
                             continue;
