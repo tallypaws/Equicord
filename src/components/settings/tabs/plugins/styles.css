@@ -30,10 +30,10 @@
     background: transparent;
     margin-right: 8px;
     color: var(--icon-muted);
-    transition: background-color .2s ease;
+    transition: background-color 0.2s ease;
 
     &:hover {
-        color: var(--interactive-icon-hover)
+        color: var(--interactive-icon-hover);
     }
 }
 
@@ -163,21 +163,6 @@
 
 .text-normal.margin-bottom {
     margin-bottom: 10px;
-}
-
-.vc-plugins-disable-warning,
-.vc-plugin-modal-disable-warning {
-    background-color: color-mix(in srgb, var(--status-danger) 10%, transparent) !important;
-    border-style: solid !important;
-    border-width: .1rem !important;
-    border-color: color-mix(in srgb, var(--status-danger) 80%, transparent) !important;
-    border-radius: 5px !important;
-    color: color-mix(in srgb, var(--status-danger) 100%, transparent) !important;
-}
-
-.vc-plugins-disable-warning:hover,
-.vc-plugin-modal-disable-warning:hover {
-    background-color: color-mix(in srgb, var(--status-danger) 40%, transparent) !important;
 }
 
 .vc-plugins-confirm-reset,

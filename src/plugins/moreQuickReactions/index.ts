@@ -14,10 +14,13 @@ const settings = definePluginSettings({
     reactionCount: {
         description: "Number of reactions (0-42)",
         type: OptionType.NUMBER,
-        default: 5
+        restartNeeded: true,
+        default: 5,
+        min: 0,
+        max: 42
     },
     frequentEmojis: {
-        description: "Use frequently used emojis instead of favourite emojis",
+        description: "Use frequently used emojis instead of favorite emojis",
         type: OptionType.BOOLEAN,
         restartNeeded: true,
         default: true
@@ -65,7 +68,7 @@ export default definePlugin({
                 replace: ".slice(0,$self.reactionCount)"
             }
         },
-        // Remove favourite emojis from being inserted at the start of the reaction list
+        // Remove favorite emojis from being inserted at the start of the reaction list
         {
             find: "this.favoriteEmojisWithoutFetchingLatest.concat",
             replacement: {
@@ -84,8 +87,8 @@ export default definePlugin({
                 },
                 // Override limit of emojis to display with offset hook.
                 {
-                    match: /"MessageContextMenu"\},\{autoTrackExposure.{0,5}\}\),/,
-                    replace: "$&[moreQuickReactionsScrollValue,setMoreQuickReactionsScrollValue]=Vencord.Webpack.Common.React.useState(0),"
+                    match: /\i=\(\(\i=\(0,\i\.\i\)\(\i\.guild_id\)\.filter\(/,
+                    replace: "[moreQuickReactionsScrollValue,setMoreQuickReactionsScrollValue]=Vencord.Webpack.Common.React.useState(0),$&"
                 },
                 {
                     match: /\.length>4&&\(\i\.length=4\)/,

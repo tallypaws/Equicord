@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-import { ChannelStore, Toasts } from "@webpack/common";
+import { ChannelStore, showToast } from "@webpack/common";
 import { DBSchema, IDBPDatabase, openDB } from "idb";
 
 import { LoggedMessageJSON } from "./types";
@@ -256,11 +256,13 @@ export async function deleteMessagesBulkIDB(message_ids: string[]) {
     message_ids.forEach(id => cachedMessages.delete(id));
 }
 
-export async function clearMessagesIDB(showToast = true) {
+export async function clearMessagesIDB(toast = true) {
     cachedMessages.clear();
 
     const deleted = await new Promise<boolean>(resolve => {
         db.close();
+        // @ts-expect-error
+        db = undefined;
         const req = indexedDB.deleteDatabase(DB_NAME);
         req.onsuccess = () => resolve(true);
         req.onerror = () => resolve(false);
@@ -271,13 +273,9 @@ export async function clearMessagesIDB(showToast = true) {
 
     cachedMessages.clear();
 
-    if (!showToast) return;
+    if (!toast) return;
 
-    Toasts.show({
-        type: Toasts.Type.MESSAGE,
-        message: "Cleared message log database and cache.",
-        id: Toasts.genId()
-    });
+    showToast({ text: "Cleared message log database and cache." });
 }
 
 // faster than db.clear on large dbs

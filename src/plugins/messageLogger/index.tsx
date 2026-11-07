@@ -15,7 +15,7 @@ import { isPluginEnabled } from "@api/PluginManager";
 import { definePluginSettings } from "@api/Settings";
 import { disableStyle, enableStyle } from "@api/Styles";
 import ErrorBoundary from "@components/ErrorBoundary";
-import { DeleteIcon, EyeIcon } from "@components/Icons";
+import { EyeIcon, HistoryIcon } from "@components/Icons";
 import { Devs, EQUIBOT_USER_ID, EquicordDevs, SUPPORT_CHANNEL_ID, VC_SUPPORT_CATEGORY_ID, VENBOT_USER_ID } from "@utils/constants";
 import { getIntlMessage } from "@utils/discord";
 import { Logger } from "@utils/Logger";
@@ -66,6 +66,19 @@ function addDeleteStyle() {
     }
 }
 
+const buttonsToRemove = [
+    "edit",
+    "reply",
+    "forward",
+    "thread",
+    "pin",
+    "delete",
+    "mark-unread",
+    "apps",
+    "bookmark",
+    "reminder"
+];
+
 /**
  * Clears a message's history (edit + attachments)
  *
@@ -100,13 +113,19 @@ function doesMessageHaveHistory(message: MLMessage): boolean {
 const REMOVE_HISTORY_ID = "ml-remove-history";
 const TOGGLE_DELETE_STYLE_ID = "ml-toggle-style";
 const TOGGLE_DIFF_VIEW_ID = "ml-toggle-diff";
-const patchMessageContextMenu: NavContextMenuPatchCallback = (
-    children,
-    props,
-) => {
-    const { message } = props;
+const patchMessageContextMenu: NavContextMenuPatchCallback = (children, { message }) => {
     const { deleted, id, channel_id } = message;
     if (!doesMessageHaveHistory(message)) return;
+
+    if (deleted) {
+        for (const id of buttonsToRemove) {
+            const group = findGroupChildrenByChildId(id, children);
+            if (group) {
+                const index = group.findIndex(c => c?.props?.id === id);
+                group.splice(index, 1);
+            }
+        }
+    }
 
     toggle: {
         if (!deleted) break toggle;
@@ -153,7 +172,7 @@ const patchMessageContextMenu: NavContextMenuPatchCallback = (
     let label;
 
     if (!isPluginEnabled("MessageLoggerEnhanced")) {
-        label = "Remove Message History";
+        label = "Clear Message History";
     } else {
         label = "Remove Message (Temporary)";
     }
@@ -163,7 +182,7 @@ const patchMessageContextMenu: NavContextMenuPatchCallback = (
             id={REMOVE_HISTORY_ID}
             key={REMOVE_HISTORY_ID}
             label={label}
-            leadingAccessory={{ type: "icon", icon: DeleteIcon }}
+            leadingAccessory={{ type: "icon", icon: HistoryIcon }}
             color="danger"
             action={() => {
                 clearMessageHistory(message);
@@ -447,7 +466,7 @@ export default definePlugin({
     name: "MessageLogger",
     description: "Temporarily logs deleted and edited messages.",
     tags: ["Chat", "Utility"],
-    authors: [Devs.rushii, Devs.Ven, Devs.AutumnVN, Devs.Nickyux, Devs.Kyuuhachi, Devs.sadan, EquicordDevs.justjxke],
+    authors: [Devs.rushii, Devs.Ven, Devs.AutumnVN, Devs.Nickyux, Devs.Kyuuhachi, Devs.sadan, EquicordDevs.justjxke, Devs.f3tch],
     dependencies: ["MessageUpdaterAPI"],
     isModified: true,
     settings,
@@ -462,6 +481,27 @@ export default definePlugin({
 
     start() {
         addDeleteStyle();
+    },
+
+    messagePopoverButton: {
+        icon: HistoryIcon,
+        render(message) {
+            const current = MessageStore.getMessage(message.channel_id, message.id) as MLMessage | undefined;
+
+            if (!current || !doesMessageHaveHistory(current))
+                return null;
+
+            return {
+                label: "Clear history",
+                icon: HistoryIcon,
+                onClick: () => {
+                    const latest = MessageStore.getMessage(message.channel_id, message.id) as MLMessage | undefined;
+                    if (!latest) return;
+
+                    clearMessageHistory(latest);
+                }
+            };
+        }
     },
 
     renderEdits: ErrorBoundary.wrap(
@@ -726,6 +766,22 @@ export default definePlugin({
         ]]
     }),
 
+    /**
+     * Get the reaction target for a reaction command like `+:emoji:`
+     *
+     * in the case of something like
+     * >actual message
+     * >deleted message
+     * >chatbox
+     * discord would grab and try to react to the deleted message
+     *
+     * https://github.com/Vendicated/Vencord/issues/4063
+     */
+    getReactionTarget(channelId: string) {
+        const msgs = MessageStore.getMessages(channelId)._array;
+        return msgs.findLast(msg => !msg.deleted);
+    },
+
     patches: [
         {
             find: '"MessageStore"',
@@ -913,6 +969,14 @@ export default definePlugin({
             replacement: {
                 match: /receiveMessage\((\i)\)\{/,
                 replace: "$& $self.normalizeNonce($1);"
+            }
+        },
+        {
+            find: "anyScopeRegex(/^\\+:(.+?): *$/)",
+            replacement: {
+                match: /(?<=anyScopeRegex\(\/\^\\\+:\(\.\+\?\): \*\$\/\),action\(\i,\i\)\{.{10,80}?\i=)\i\.\i\.getMessages\((\i\.id)\)\.last\(\)/,
+                replace: "$self.getReactionTarget($1)"
+
             }
         }
     ]

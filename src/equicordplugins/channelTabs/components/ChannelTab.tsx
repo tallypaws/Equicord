@@ -64,7 +64,7 @@ const ChannelIcon = ({ channel }: { channel: Channel; }) =>
     <img
         src={channel?.icon
             ? `https://${window.GLOBAL_ENV.CDN_HOST}/channel-icons/${channel?.id}/${channel?.icon}.png`
-            : "https://discord.com/assets/c6851bd0b03f1cca5a8c1e720ea6ea17.png" // Default Group Icon
+            : "/assets/c6851bd0b03f1cca5a8c1e720ea6ea17.png" // Default Group Icon
         }
         className={cl("icon")}
     />;
@@ -170,7 +170,7 @@ function ChannelTabContent(props: ChannelTabsProps & {
     guild?: Guild,
     channel?: Channel;
 }) {
-    const { guild, guildId, channel, channelId, compact } = props;
+    const { guild, guildId, channel, channelId } = props;
     const userId = UserStore.getCurrentUser()?.id;
     const recipients = channel?.recipients;
     const {

@@ -30,21 +30,7 @@ import { Song as SongType } from "@song-spotlight/api/structs";
 import { isListLayout, sid } from "@song-spotlight/api/util";
 import { copyWithToast } from "@utils/discord";
 import { classes } from "@utils/misc";
-import {
-    Clickable,
-    ContextMenuApi,
-    FluxDispatcher,
-    Menu,
-    React,
-    ScrollerThin,
-    showToast,
-    Toasts,
-    Tooltip,
-    useCallback,
-    useMemo,
-    useRef,
-    useState
-} from "@webpack/common";
+import { Clickable, ContextMenuApi, FluxDispatcher, Menu, React, ScrollerThin, showToast, Tooltip, useCallback, useMemo, useRef, useState } from "@webpack/common";
 
 interface SongEntryProps {
     entry: RenderInfoEntryBased;
@@ -83,16 +69,16 @@ function SongEntry({ entry, number, isLoaded, isPlaying, big, onClick }: SongEnt
                             action={async () => {
                                 const self = useSongStore.getState().self?.data ?? [];
                                 if (self.length >= apiConstants.songLimit) {
-                                    return showToast("You don't have enough space!");
+                                    return showToast({ text: "You don't have enough space!" });
                                 }
 
                                 const song = await Native.parseLink(entry.link);
                                 if (!song) {
-                                    return showToast("Uh oh, this song doesn't exist!", Toasts.Type.FAILURE);
+                                    return showToast({ text: "Uh oh, this song doesn't exist!", variant: "critical" });
                                 }
 
                                 if (self.find(x => sid(x) === sid(song))) {
-                                    return showToast("You already have this song added!");
+                                    return showToast({ text: "You already have this song added!" });
                                 }
 
                                 openSettingsModal([...self, song]);
@@ -201,10 +187,10 @@ function SongInfo({ owned, song, render, big }: SongInfoProps) {
                                                         action={() => {
                                                             const self = useSongStore.getState().self?.data ?? [];
                                                             if (self.length >= apiConstants.songLimit) {
-                                                                return showToast("You don't have enough space!");
+                                                                return showToast({ text: "You don't have enough space!" });
                                                             }
                                                             if (self.find(x => sid(x) === sid(song))) {
-                                                                return showToast("You already have this song added!");
+                                                                return showToast({ text: "You already have this song added!" });
                                                             }
 
                                                             openSettingsModal([...self, song]);
@@ -223,7 +209,7 @@ function SongInfo({ owned, song, render, big }: SongInfoProps) {
 
                                                             const i = self.findIndex(x => sid(x) === sid(song));
                                                             if (i === -1) {
-                                                                return showToast("You... don't have this song added?");
+                                                                return showToast({ text: "You... don't have this song added?" });
                                                             }
 
                                                             openSettingsModal(self.toSpliced(i, 1));
